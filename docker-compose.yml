@@ -1,0 +1,39 @@
+services:
+  api:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=mysql+mysqlconnector://root:senha@db:3306/teste
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    networks:
+      - app-network
+    restart: unless-stopped
+  db:
+    image: mysql:9.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=senha
+      - MYSQL_DATABASE=teste
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app-network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  app-network:
+    driver: bridge
